@@ -49,3 +49,15 @@ KidneyCalc is a SwiftUI iOS app that provides a curated set of nephrology calcul
 ## Medical Disclaimer
 
 This app is for educational and reference purposes only. It does not provide medical advice, diagnosis, or treatment. Always use clinical judgment and consult authoritative sources.
+
+## Privacy Policy
+
+Nephro Calc is built with your privacy as a primary feature. I believe that a simple tool like a calculator shouldn't be a gateway for data collection.
+
+No Data Collection: This application does not collect, store, or transmit any personal information, usage data, or mathematical input.
+
+Offline First: All calculations are performed locally on your device. No data ever leaves your machine.
+
+No Third-Party Tracking: There are no cookies, analytics, or third-party SDKs integrated into this project.
+
+Transparency: You are free to review the source code here. 
