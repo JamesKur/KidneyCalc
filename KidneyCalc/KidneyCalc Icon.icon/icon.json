@@ -1,0 +1,190 @@
+{
+  "fill" : "system-light",
+  "groups" : [
+    {
+      "blur-material" : null,
+      "layers" : [
+        {
+          "glass" : false,
+          "image-name" : "text.png",
+          "name" : "text",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              9,
+              -254.22389527281564
+            ]
+          }
+        },
+        {
+          "image-name" : "equals dark.png",
+          "name" : "equals dark",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              69.33709346676983,
+              214.44188820178897
+            ]
+          }
+        },
+        {
+          "image-name" : "Add.png",
+          "name" : "Add",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              0,
+              -93
+            ]
+          }
+        },
+        {
+          "image-name" : "Divide.png",
+          "name" : "Divide",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              152,
+              70.77610472718436
+            ]
+          }
+        },
+        {
+          "image-name" : "minus.png",
+          "name" : "minus",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              150.5,
+              -93
+            ]
+          }
+        },
+        {
+          "image-name" : "multiply.png",
+          "name" : "multiply",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              0,
+              70.77610472718436
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "layer-color",
+        "opacity" : 1
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.37
+      }
+    },
+    {
+      "blur-material" : 0.4,
+      "layers" : [
+        {
+          "image-name" : "Textfield.png",
+          "name" : "Textfield",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              8.33709346676983,
+              -254.22389527281564
+            ]
+          }
+        },
+        {
+          "glass" : false,
+          "image-name" : "squar button mode 2 copy 2.png",
+          "name" : "squar button mode 2 copy 2",
+          "opacity" : 1,
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              0,
+              -96.22389527281564
+            ]
+          }
+        },
+        {
+          "glass" : false,
+          "image-name" : "squar button mode 2 2.png",
+          "name" : "squar button mode 2 2",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              149,
+              -96.22389527281564
+            ]
+          }
+        },
+        {
+          "glass" : false,
+          "image-name" : "squar button mode copy 2.png",
+          "name" : "squar button mode copy 2",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              0,
+              69.77610472718436
+            ]
+          }
+        },
+        {
+          "glass" : false,
+          "image-name" : "squar button mode 3.png",
+          "name" : "squar button mode 3",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              149,
+              69.77610472718436
+            ]
+          }
+        }
+      ],
+      "lighting" : "combined",
+      "shadow" : {
+        "kind" : "layer-color",
+        "opacity" : 1
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : true,
+        "value" : 1
+      }
+    },
+    {
+      "blend-mode" : "normal",
+      "layers" : [
+        {
+          "image-name" : "Kidney.png",
+          "name" : "Kidney",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "layer-color",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}
