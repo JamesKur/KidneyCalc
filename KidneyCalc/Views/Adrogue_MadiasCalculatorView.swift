@@ -9,6 +9,7 @@ struct Adrogue_MadiasCalculatorView: View {
     @State private var sex: Sex = .male
     @State private var ageGroup: AgeGroup = .adult
     @FocusState private var focusedField: Field?
+    @EnvironmentObject private var keyboardToolbar: KeyboardToolbarState
     
     enum Sex: String, CaseIterable {
         case male = "Male"
@@ -87,6 +88,7 @@ struct Adrogue_MadiasCalculatorView: View {
             ("0.45% NS", 77),
             ("Lactated Ringer's", 130),
             ("D5W", 0),
+            ("2% Saline", 342),
             ("3% Hypertonic Saline", 513)
         ]
     }
@@ -118,6 +120,15 @@ struct Adrogue_MadiasCalculatorView: View {
     
     enum NavigationDirection {
         case forward, back
+    }
+    
+    private func updateToolbarState() {
+        keyboardToolbar.isActive = focusedField != nil
+        keyboardToolbar.isFirstField = focusedField == .sodium
+        keyboardToolbar.isLastField = isLastField
+        keyboardToolbar.onBack = { moveFocus(direction: .back) }
+        keyboardToolbar.onForward = { moveFocus(direction: .forward) }
+        keyboardToolbar.onDismiss = { focusedField = nil }
     }
     
     var body: some View {
@@ -169,8 +180,27 @@ struct Adrogue_MadiasCalculatorView: View {
                             }
                         }
                     }
-                    .padding(.horizontal, 2)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
                 }
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color(.systemGray6).opacity(0.7))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
+                        )
+                        .shadow(color: Color.black.opacity(0.08), radius: 2, x: 0, y: 1)
+                )
+                .mask(
+                    HStack(spacing: 0) {
+                        LinearGradient(colors: [.clear, .black], startPoint: .leading, endPoint: .trailing)
+                            .frame(width: 8)
+                        Color.black
+                        LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing)
+                            .frame(width: 8)
+                    }
+                )
                 
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Weight")
@@ -230,55 +260,9 @@ struct Adrogue_MadiasCalculatorView: View {
                 }
             }
             .padding()
-            .background(
-                LinearGradient(
-                    colors: [Color.blue.opacity(0.05), Color.cyan.opacity(0.05)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.blue.opacity(0.2), lineWidth: 1)
-            )
-            .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    
-                    HStack(spacing: 16) {
-                        Button(action: { moveFocus(direction: .back) }) {
-                            Image(systemName: "chevron.up")
-                                .font(.system(size: 16, weight: .semibold))
-                        }
-                        .disabled(focusedField == .sodium)
-                        
-                        Divider()
-                            .frame(height: 20)
-                        
-                        Button(action: { moveFocus(direction: .forward) }) {
-                            Image(systemName: "chevron.down")
-                                .font(.system(size: 16, weight: .semibold))
-                        }
-                        .disabled(isLastField)
-                        
-                        Divider()
-                            .frame(height: 20)
-                        
-                        Button(action: {
-                            if isLastField {
-                                focusedField = nil
-                            } else {
-                                moveFocus(direction: .forward)
-                            }
-                        }) {
-                            Text(isLastField ? "Done" : "Next")
-                                .font(.system(size: 14, weight: .bold))
-                        }
-                    }
-                    .padding(.leading, 6)
-                }
-            }
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
+            .onChange(of: focusedField) { _, _ in updateToolbarState() }
+            .onDisappear { keyboardToolbar.isActive = false }
             
             // Results
             if let current = Double(currentSodium),
@@ -383,24 +367,11 @@ struct Adrogue_MadiasCalculatorView: View {
                             .foregroundColor(.primary)
                             .padding()
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(
-                                LinearGradient(
-                                    colors: [Color.indigo.opacity(0.15), Color.purple.opacity(0.1)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .cornerRadius(8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.indigo.opacity(0.3), lineWidth: 1)
-                            )
+                            .background(.ultraThinMaterial, in: .rect(cornerRadius: 10))
                     }
                 }
                 .padding()
-                .background(Color(uiColor: .secondarySystemGroupedBackground))
-                .cornerRadius(12)
-                .shadow(color: Color.primary.opacity(0.1), radius: 5, x: 0, y: 2)
+                .glassEffect(.regular, in: .rect(cornerRadius: 16))
                 .transition(.asymmetric(insertion: .opacity.combined(with: .scale(scale: 0.9)), removal: .opacity))
                 .animation(.spring(response: 0.5, dampingFraction: 0.7), value: predictedSodium)
             }
@@ -410,31 +381,18 @@ struct Adrogue_MadiasCalculatorView: View {
                 Text("Adrogue-Madias Formula")
                     .font(.headline)
                     .foregroundColor(.orange)
-                Text("ΔNa = (Na_infusate - Na_serum) × Volume(L) / (TBW + 1)")
-                    .font(.system(.body, design: .monospaced))
+                formulaText("ΔNa = (Na_infusate - Na_serum) × Volume(L) / (TBW + 1)")
                     .foregroundColor(.primary)
                 Text("TBW Calculation:")
-                    .font(.system(.caption, design: .monospaced))
+                    .font(.system(.subheadline, design: .monospaced))
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
                     .padding(.top, 4)
                 Text("Adult: Male 0.6 × wt, Female 0.5 × wt\nElderly: Male 0.5 × wt, Female 0.45 × wt")
-                    .font(.system(.caption, design: .monospaced))
                     .foregroundColor(.primary)
             }
             .padding()
-            .background(
-                LinearGradient(
-                    colors: [Color.orange.opacity(0.08), Color.yellow.opacity(0.08)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-            )
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
             
             // Clinical Notes
             VStack(alignment: .leading, spacing: 8) {
@@ -457,18 +415,23 @@ struct Adrogue_MadiasCalculatorView: View {
                 }
             }
             .padding()
-            .background(
-                LinearGradient(
-                    colors: [Color.pink.opacity(0.08), Color.red.opacity(0.06)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.pink.opacity(0.3), lineWidth: 1)
-            )
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
+            
+            // Abbreviations
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Abbreviations")
+                    .font(.headline)
+                    .foregroundColor(.gray)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("TBW — Total Body Water")
+                    Text("NS — Normal Saline")
+                    Text("D5W — Dextrose 5% in Water")
+                }
+                .font(.caption)
+                .foregroundColor(.secondary)
+            }
+            .padding()
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
         }
     }
 }
@@ -478,4 +441,5 @@ struct Adrogue_MadiasCalculatorView: View {
         Adrogue_MadiasCalculatorView()
             .padding()
     }
+    .environmentObject(KeyboardToolbarState())
 }

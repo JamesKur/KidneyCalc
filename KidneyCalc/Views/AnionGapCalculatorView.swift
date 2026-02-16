@@ -6,19 +6,28 @@ struct AnionGapCalculatorView: View {
     @State private var bicarbonate: String = ""
     @State private var albumin: String = ""
     @State private var useAlbuminCorrection: Bool = false
+    @State private var directAnionGapInput: String = ""
+    @AppStorage("anionGapCalculatorMode") private var useDirectInput: Bool = false
     @FocusState private var focusedField: Field?
+    @EnvironmentObject private var keyboardToolbar: KeyboardToolbarState
     
     enum Field: Hashable {
-        case sodium, chloride, bicarbonate, albumin
+        case sodium, chloride, bicarbonate, albumin, directAnionGap
     }
     
     private var anionGap: Double? {
-        guard let na = Double(sodium),
-              let cl = Double(chloride),
-              let hco3 = Double(bicarbonate) else {
-            return nil
+        if useDirectInput {
+            // Use the direct input value
+            return Double(directAnionGapInput)
+        } else {
+            // Calculate from electrolytes
+            guard let na = Double(sodium),
+                  let cl = Double(chloride),
+                  let hco3 = Double(bicarbonate) else {
+                return nil
+            }
+            return na - (cl + hco3)
         }
-        return na - (cl + hco3)
     }
     
     private var correctedAnionGap: Double? {
@@ -57,13 +66,26 @@ struct AnionGapCalculatorView: View {
     
     private var isLastField: Bool {
         if let currentField = focusedField {
-            switch currentField {
-            case .albumin:
-                return true
-            case .bicarbonate:
-                return !useAlbuminCorrection
-            default:
-                return false
+            if useDirectInput {
+                // In direct input mode, last field depends on albumin correction
+                switch currentField {
+                case .albumin:
+                    return true
+                case .bicarbonate:
+                    return !useAlbuminCorrection
+                default:
+                    return false
+                }
+            } else {
+                // In calculation mode
+                switch currentField {
+                case .albumin:
+                    return true
+                case .bicarbonate:
+                    return !useAlbuminCorrection
+                default:
+                    return false
+                }
             }
         }
         return false
@@ -72,9 +94,15 @@ struct AnionGapCalculatorView: View {
     private func moveFocus(direction: NavigationDirection) {
         guard let current = focusedField else { return }
         
-        // Define the sequence of fields based on the toggle
+        // Define the sequence of fields based on the mode and toggle
         let fields: [Field]
-        if useAlbuminCorrection {
+        if useDirectInput {
+            if useAlbuminCorrection {
+                fields = [.directAnionGap, .bicarbonate, .albumin]
+            } else {
+                fields = [.directAnionGap, .bicarbonate]
+            }
+        } else if useAlbuminCorrection {
             fields = [.sodium, .chloride, .bicarbonate, .albumin]
         } else {
             fields = [.sodium, .chloride, .bicarbonate]
@@ -100,123 +128,169 @@ struct AnionGapCalculatorView: View {
         case forward, back
     }
     
+    private func updateToolbarState() {
+        keyboardToolbar.isActive = focusedField != nil
+        keyboardToolbar.isFirstField = focusedField == .sodium || focusedField == .directAnionGap
+        keyboardToolbar.isLastField = isLastField
+        keyboardToolbar.onBack = { moveFocus(direction: .back) }
+        keyboardToolbar.onForward = { moveFocus(direction: .forward) }
+        keyboardToolbar.onDismiss = { focusedField = nil }
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            // Input Fields
-            VStack(alignment: .leading, spacing: 16) {
+            // Mode Toggle
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Calculate Mode")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.gray)
                 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Sodium (Na)")
-                        .foregroundColor(.blue)
-                        .fontWeight(.medium)
-                        .font(.subheadline)
-                    TextField(" mEq/L", text: $sodium)
-                        .textFieldStyle(SoftTextFieldStyle())
-                        #if os(iOS)
-                        .keyboardType(.decimalPad)
-                        #endif
-                        .focused($focusedField, equals: .sodium)
-                }
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Chloride (Cl)")
-                        .foregroundColor(.green)
-                        .fontWeight(.medium)
-                        .font(.subheadline)
-                    TextField(" mEq/L", text: $chloride)
-                        .textFieldStyle(SoftTextFieldStyle())
-                        #if os(iOS)
-                        .keyboardType(.decimalPad)
-                        #endif
-                        .focused($focusedField, equals: .chloride)
-                }
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Bicarbonate (HCO₃)")
-                        .foregroundColor(.teal)
-                        .fontWeight(.medium)
-                        .font(.subheadline)
-                    TextField(" mEq/L", text: $bicarbonate)
-                        .textFieldStyle(SoftTextFieldStyle())
-                        #if os(iOS)
-                        .keyboardType(.decimalPad)
-                        #endif
-                        .focused($focusedField, equals: .bicarbonate)
-                }
-            
-                // Albumin correction toggle and input
-                Toggle("Albumin Correction", isOn: $useAlbuminCorrection)
-                    .fontWeight(.medium)
-                    .tint(.purple)
-                
-                if useAlbuminCorrection {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Albumin")
-                            .foregroundColor(.purple)
+                HStack(spacing: 16) {
+                    Button(action: { useDirectInput = false }) {
+                        Text("From Electrolytes")
+                            .frame(maxWidth: .infinity)
+                            .padding(10)
+                            .background(useDirectInput ? Color.gray.opacity(0.1) : Color.blue.opacity(0.2))
+                            .foregroundColor(useDirectInput ? .gray : .blue)
+                            .cornerRadius(8)
                             .fontWeight(.medium)
-                            .font(.subheadline)
-                        TextField("g/dL", text: $albumin)
-                            .textFieldStyle(SoftTextFieldStyle())
-                            #if os(iOS)
-                        .keyboardType(.decimalPad)
-                        #endif
-                            .focused($focusedField, equals: .albumin)
                     }
-                    .transition(.opacity)
+                    
+                    Button(action: { useDirectInput = true }) {
+                        Text("Direct AG Input")
+                            .frame(maxWidth: .infinity)
+                            .padding(10)
+                            .background(useDirectInput ? Color.blue.opacity(0.2) : Color.gray.opacity(0.1))
+                            .foregroundColor(useDirectInput ? .blue : .gray)
+                            .cornerRadius(8)
+                            .fontWeight(.medium)
+                    }
                 }
             }
             .padding()
-            .background(
-                LinearGradient(
-                    colors: [Color.blue.opacity(0.05), Color.cyan.opacity(0.05)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.blue.opacity(0.2), lineWidth: 1)
-            )
-            .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
+            
+            // Input Fields
+            VStack(alignment: .leading, spacing: 16) {
+                
+                if useDirectInput {
+                    // Direct Anion Gap Input
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Anion Gap")
+                            .foregroundColor(.blue)
+                            .fontWeight(.medium)
+                            .font(.subheadline)
+                        TextField("mEq/L", text: $directAnionGapInput)
+                            .textFieldStyle(SoftTextFieldStyle())
+                            #if os(iOS)
+                            .keyboardType(.decimalPad)
+                            #endif
+                            .focused($focusedField, equals: .directAnionGap)
+                    }
                     
-                    HStack(spacing: 16) {
-                        // Back Button
-                        Button(action: { moveFocus(direction: .back) }) {
-                            Image(systemName: "chevron.up")
-                                .font(.system(size: 16, weight: .semibold))
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Bicarbonate (HCO₃)")
+                            .foregroundColor(.teal)
+                            .fontWeight(.medium)
+                            .font(.subheadline)
+                        TextField(" mEq/L", text: $bicarbonate)
+                            .textFieldStyle(SoftTextFieldStyle())
+                            #if os(iOS)
+                            .keyboardType(.decimalPad)
+                            #endif
+                            .focused($focusedField, equals: .bicarbonate)
+                    }
+                    
+                    // Albumin correction toggle and input
+                    Toggle("Albumin Correction", isOn: $useAlbuminCorrection)
+                        .fontWeight(.medium)
+                        .tint(.purple)
+                    
+                    if useAlbuminCorrection {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Albumin")
+                                .foregroundColor(.purple)
+                                .fontWeight(.medium)
+                                .font(.subheadline)
+                            TextField("g/dL", text: $albumin)
+                                .textFieldStyle(SoftTextFieldStyle())
+                                #if os(iOS)
+                            .keyboardType(.decimalPad)
+                        #endif
+                                .focused($focusedField, equals: .albumin)
                         }
-                        .disabled(focusedField == .sodium)
-                        
-                        Divider()
-                            .frame(height: 20)
-                        
-                        // Forward Button
-                        Button(action: { moveFocus(direction: .forward) }) {
-                            Image(systemName: "chevron.down")
-                                .font(.system(size: 16, weight: .semibold))
+                        .transition(.opacity)
+                    }
+                } else {
+                    // Electrolyte Inputs
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Sodium (Na)")
+                            .foregroundColor(.blue)
+                            .fontWeight(.medium)
+                            .font(.subheadline)
+                        TextField(" mEq/L", text: $sodium)
+                            .textFieldStyle(SoftTextFieldStyle())
+                            #if os(iOS)
+                            .keyboardType(.decimalPad)
+                            #endif
+                            .focused($focusedField, equals: .sodium)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Chloride (Cl)")
+                            .foregroundColor(.green)
+                            .fontWeight(.medium)
+                            .font(.subheadline)
+                        TextField(" mEq/L", text: $chloride)
+                            .textFieldStyle(SoftTextFieldStyle())
+                            #if os(iOS)
+                            .keyboardType(.decimalPad)
+                            #endif
+                            .focused($focusedField, equals: .chloride)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Bicarbonate (HCO₃)")
+                            .foregroundColor(.teal)
+                            .fontWeight(.medium)
+                            .font(.subheadline)
+                        TextField(" mEq/L", text: $bicarbonate)
+                            .textFieldStyle(SoftTextFieldStyle())
+                            #if os(iOS)
+                            .keyboardType(.decimalPad)
+                            #endif
+                            .focused($focusedField, equals: .bicarbonate)
+                    }
+                
+                    // Albumin correction toggle and input
+                    Toggle("Albumin Correction", isOn: $useAlbuminCorrection)
+                        .fontWeight(.medium)
+                        .tint(.purple)
+                    
+                    if useAlbuminCorrection {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Albumin")
+                                .foregroundColor(.purple)
+                                .fontWeight(.medium)
+                                .font(.subheadline)
+                            TextField("g/dL", text: $albumin)
+                                .textFieldStyle(SoftTextFieldStyle())
+                                #if os(iOS)
+                            .keyboardType(.decimalPad)
+                        #endif
+                                .focused($focusedField, equals: .albumin)
                         }
-                        .disabled(isLastField)
-                        
-                        Divider()
-                            .frame(height: 20)
-                        
-                        // Next/Done Button
-                        Button(action: {
-                            if isLastField {
-                                focusedField = nil // Dismiss keyboard
-                            } else {
-                                moveFocus(direction: .forward)
-                            }
-                        }) {
-                            Text(isLastField ? "Done" : "Next")
-                                .font(.system(size: 14, weight: .bold))
-                        }                    }
-                    .padding(.leading, 6)
+                        .transition(.opacity)
+                    }
                 }
             }
+            .padding()
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
+            .onChange(of: focusedField) { _, _ in updateToolbarState() }
+            .onChange(of: useDirectInput) { _, _ in updateToolbarState() }
+            .onChange(of: useAlbuminCorrection) { _, _ in updateToolbarState() }
+            .onDisappear { keyboardToolbar.isActive = false }
             
             // Results
             if anionGap != nil {
@@ -303,26 +377,13 @@ struct AnionGapCalculatorView: View {
                                     .fontWeight(.medium)
                                     .padding()
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(
-                                        LinearGradient(
-                                            colors: [Color.indigo.opacity(0.15), Color.purple.opacity(0.1)],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
-                                    .cornerRadius(8)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.indigo.opacity(0.3), lineWidth: 1)
-                                    )
+                                    .background(.ultraThinMaterial, in: .rect(cornerRadius: 10))
                             }
                         }
                     }
                 }
                 .padding()
-                .background(Color(uiColor: .secondarySystemGroupedBackground))
-                .cornerRadius(12)
-                .shadow(color: Color.primary.opacity(0.1), radius: 5, x: 0, y: 2)
+                .glassEffect(.regular, in: .rect(cornerRadius: 16))
                 .transition(.asymmetric(insertion: .opacity.combined(with: .scale(scale: 0.9)), removal: .opacity))
                 .animation(.spring(response: 0.5, dampingFraction: 0.7), value: anionGap)
             }
@@ -343,18 +404,24 @@ struct AnionGapCalculatorView: View {
                     .foregroundColor(.primary)
             }
             .padding()
-            .background(
-                LinearGradient(
-                    colors: [Color.orange.opacity(0.08), Color.yellow.opacity(0.08)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-            )
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
+            
+            // Abbreviations
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Abbreviations")
+                    .font(.headline)
+                    .foregroundColor(.gray)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("AG — Anion Gap")
+                    Text("HAGMA — High Anion Gap Metabolic Acidosis")
+                    Text("NAGMA — Normal Anion Gap Metabolic Acidosis")
+                    Text("ΔΔ — Delta-Delta Ratio")
+                }
+                .font(.caption)
+                .foregroundColor(.secondary)
+            }
+            .padding()
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
         }
     }
 }
@@ -364,4 +431,5 @@ struct AnionGapCalculatorView: View {
         AnionGapCalculatorView()
             .padding()
     }
+    .environmentObject(KeyboardToolbarState())
 }

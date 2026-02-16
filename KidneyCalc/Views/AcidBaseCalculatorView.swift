@@ -6,6 +6,7 @@ struct AcidBaseCalculatorView: View {
     @State private var pco2: String = ""
     @State private var isAcute: Bool = true
     @FocusState private var focusedField: Field?
+    @EnvironmentObject private var keyboardToolbar: KeyboardToolbarState
     
     enum Field: Hashable {
         case pH, bicarbonate, pco2
@@ -199,6 +200,15 @@ struct AcidBaseCalculatorView: View {
         case forward, back
     }
     
+    private func updateToolbarState() {
+        keyboardToolbar.isActive = focusedField != nil
+        keyboardToolbar.isFirstField = focusedField == .pH
+        keyboardToolbar.isLastField = isLastField
+        keyboardToolbar.onBack = { moveFocus(direction: .back) }
+        keyboardToolbar.onForward = { moveFocus(direction: .forward) }
+        keyboardToolbar.onDismiss = { focusedField = nil }
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             // Input Fields
@@ -255,55 +265,9 @@ struct AcidBaseCalculatorView: View {
                     .tint(.purple)
             }
             .padding()
-            .background(
-                LinearGradient(
-                    colors: [Color.red.opacity(0.05), Color.blue.opacity(0.05)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.red.opacity(0.2), lineWidth: 1)
-            )
-            .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    
-                    HStack(spacing: 16) {
-                        Button(action: { moveFocus(direction: .back) }) {
-                            Image(systemName: "chevron.up")
-                                .font(.system(size: 16, weight: .semibold))
-                        }
-                        .disabled(focusedField == .pH)
-                        
-                        Divider()
-                            .frame(height: 20)
-                        
-                        Button(action: { moveFocus(direction: .forward) }) {
-                            Image(systemName: "chevron.down")
-                                .font(.system(size: 16, weight: .semibold))
-                        }
-                        .disabled(isLastField)
-                        
-                        Divider()
-                            .frame(height: 20)
-                        
-                        Button(action: {
-                            if isLastField {
-                                focusedField = nil
-                            } else {
-                                moveFocus(direction: .forward)
-                            }
-                        }) {
-                            Text(isLastField ? "Done" : "Next")
-                                .font(.system(size: 14, weight: .bold))
-                        }
-                    }
-                    .padding(.leading, 6)
-                }
-            }
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
+            .onChange(of: focusedField) { _, _ in updateToolbarState() }
+            .onDisappear { keyboardToolbar.isActive = false }
             
             // Results
             if isValidInput, let interpretation = acidBaseInterpretation {
@@ -351,9 +315,7 @@ struct AcidBaseCalculatorView: View {
                     }
                 }
                 .padding()
-                .background(Color(uiColor: .secondarySystemGroupedBackground))
-                .cornerRadius(12)
-                .shadow(color: Color.primary.opacity(0.1), radius: 5, x: 0, y: 2)
+                .glassEffect(.regular, in: .rect(cornerRadius: 16))
                 .transition(.asymmetric(insertion: .opacity.combined(with: .scale(scale: 0.9)), removal: .opacity))
             }
             
@@ -368,11 +330,11 @@ struct AcidBaseCalculatorView: View {
                         .font(.caption)
                         .fontWeight(.semibold)
                     Text("• pH: 7.35 - 7.45")
-                        .font(.caption2)
+                        .font(.caption)
                     Text("• HCO3: 22 - 26 mEq/L")
-                        .font(.caption2)
+                        .font(.caption)
                     Text("• PCO2: 35 - 45 mmHg")
-                        .font(.caption2)
+                        .font(.caption)
                 }
                 .padding(.bottom, 8)
                 
@@ -381,7 +343,7 @@ struct AcidBaseCalculatorView: View {
                         .font(.caption)
                         .fontWeight(.semibold)
                     Text("Expected PCO2 = 1.5 × [HCO3] + 8 ± 2")
-                        .font(.system(.caption2, design: .monospaced))
+                        .font(.system(.caption, design: .monospaced))
                 }
                 .padding(.bottom, 8)
                 
@@ -390,49 +352,52 @@ struct AcidBaseCalculatorView: View {
                         .font(.caption)
                         .fontWeight(.semibold)
                     Text("Expected PCO2 = 0.7 × [HCO3] + 20 ± 5")
-                        .font(.system(.caption2, design: .monospaced))
+                        .font(.system(.caption, design: .monospaced))
                 }
                 .padding(.bottom, 8)
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Respiratory Compensation:")
-                        .font(.caption)
+                        .font(.subheadline)
                         .fontWeight(.semibold)
                     Text("Acute Respiratory Acidosis:")
-                        .font(.caption2)
+                        .font(.caption)
                         .fontWeight(.semibold)
                     Text("• HCO3 increases ~1 mEq/L per 10 mmHg PCO2 increase")
-                        .font(.caption2)
+                        .font(.caption)
                     Text("Chronic Respiratory Acidosis:")
-                        .font(.caption2)
+                        .font(.caption)
                         .fontWeight(.semibold)
                     Text("• HCO3 increases ~4 mEq/L per 10 mmHg PCO2 increase")
-                        .font(.caption2)
+                        .font(.caption)
                     Text("Acute Respiratory Alkalosis:")
-                        .font(.caption2)
+                        .font(.caption)
                         .fontWeight(.semibold)
                     Text("• HCO3 decreases ~2 mEq/L per 10 mmHg PCO2 decrease")
-                        .font(.caption2)
+                        .font(.caption)
                     Text("Chronic Respiratory Alkalosis:")
-                        .font(.caption2)
+                        .font(.caption)
                         .fontWeight(.semibold)
                     Text("• HCO3 decreases ~5 mEq/L per 10 mmHg PCO2 decrease")
-                        .font(.caption2)
+                        .font(.caption)
                 }
             }
             .padding()
-            .background(
-                LinearGradient(
-                    colors: [Color.orange.opacity(0.08), Color.yellow.opacity(0.08)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-            )
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
+            
+            // Abbreviations
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Abbreviations")
+                    .font(.headline)
+                    .foregroundColor(.gray)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("ABG — Arterial Blood Gas")
+                }
+                .font(.caption)
+                .foregroundColor(.secondary)
+            }
+            .padding()
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
         }
     }
 }
@@ -442,4 +407,5 @@ struct AcidBaseCalculatorView: View {
         AcidBaseCalculatorView()
             .padding()
     }
+    .environmentObject(KeyboardToolbarState())
 }

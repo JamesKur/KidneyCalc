@@ -3,10 +3,16 @@ import SwiftUI
 struct FormulaDetailView: View {
     let formula: Formula
     @State private var isReferencesExpanded = false
+    @StateObject private var keyboardToolbar = KeyboardToolbarState()
+    @EnvironmentObject var favorites: FavoritesManager
     
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+        ZStack(alignment: .bottom) {
+            ZStack {
+                AnimatedMeshBackground()
+                
+                ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
                 // Title
                 Text(formula.name)
                     .font(.title2)
@@ -19,9 +25,8 @@ struct FormulaDetailView: View {
                         .fontWeight(.semibold)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .background(Color.blue.opacity(0.2))
                         .foregroundColor(.blue)
-                        .cornerRadius(8)
+                        .glassEffect(.regular, in: .capsule)
                     Spacer()
                 }
                 
@@ -55,17 +60,23 @@ struct FormulaDetailView: View {
                     AcidBaseCalculatorView()
                 } else if formula.name == "Bicarbonate Deficit" {
                     BicarbonateDeficitCalculatorView()
+                } else if formula.name == "Serum Osmolality & Osmolal Gap" {
+                    OsmolalityCalculatorView()
+                } else if formula.name == "Electrolyte-Free Water Clearance" {
+                    EFWCCalculatorView()
+                } else if formula.name == "Urine Osmolal Gap" {
+                    UrineOsmolalGapCalculatorView()
+                } else if formula.name == "Urine Anion Gap" {
+                    UrineAnionGapCalculatorView()
                 } else {
                     // Equation (if available)
                     if let equation = formula.equation {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Equation")
                                 .font(.headline)
-                            Text(equation)
-                                .font(.system(.body, design: .monospaced))
+                            formulaText(equation)
                                 .padding()
-                                .background(Color(uiColor: .secondarySystemGroupedBackground))
-                                .cornerRadius(8)
+                                .glassEffect(.regular, in: .rect(cornerRadius: 10))
                         }
                     }
 
@@ -76,8 +87,7 @@ struct FormulaDetailView: View {
                                 .font(.headline)
                             VStack(alignment: .leading, spacing: 4) {
                                 ForEach(variables, id: \.self) { variable in
-                                    Text("• " + variable)
-                                        .font(.body)
+                                    formulaText("• " + variable, baseFont: .body)
                                 }
                             }
                         }
@@ -96,12 +106,7 @@ struct FormulaDetailView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.orange.opacity(0.15))
-                    .cornerRadius(8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.orange.opacity(0.4), lineWidth: 1)
-                    )
+                    .glassEffect(.regular, in: .rect(cornerRadius: 12))
                 }
 
                 // References (if available)
@@ -121,8 +126,37 @@ struct FormulaDetailView: View {
                 }
             }
             .padding()
+            .padding(.bottom, keyboardToolbar.isActive ? 50 : 0)
         }
+            } // ZStack with background
+        
+            if keyboardToolbar.isActive {
+                KeyboardNavigationToolbar(
+                    isFirstField: keyboardToolbar.isFirstField,
+                    isLastField: keyboardToolbar.isLastField,
+                    onBack: keyboardToolbar.onBack,
+                    onForward: keyboardToolbar.onForward,
+                    onDismiss: keyboardToolbar.onDismiss
+                )
+                .padding(.bottom, 10)
+                .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: keyboardToolbar.isActive)
+        .environmentObject(keyboardToolbar)
         .navigationTitle(formula.name)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                FavoriteButton(
+                    isFavorite: favorites.isFavorite(formula),
+                    action: {
+                        withAnimation(.spring(response: 0.45, dampingFraction: 0.75)) {
+                            favorites.toggle(formula)
+                        }
+                    }
+                )
+            }
+        }
     }
 }
 
@@ -134,4 +168,6 @@ struct FormulaDetailView: View {
             description: "This is a sample formula description"
         ))
     }
+    .environmentObject(KeyboardToolbarState())
+    .environmentObject(FavoritesManager())
 }

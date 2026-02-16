@@ -7,6 +7,7 @@ struct FreeWaterDeficitCalculatorView: View {
     @State private var sex: Sex = .male
     @State private var ageGroup: AgeGroup = .adult
     @FocusState private var focusedField: Field?
+    @EnvironmentObject private var keyboardToolbar: KeyboardToolbarState
     
     enum Sex: String, CaseIterable {
         case male = "Male"
@@ -111,6 +112,15 @@ struct FreeWaterDeficitCalculatorView: View {
         case forward, back
     }
     
+    private func updateToolbarState() {
+        keyboardToolbar.isActive = focusedField != nil
+        keyboardToolbar.isFirstField = focusedField == .currentSodium
+        keyboardToolbar.isLastField = isLastField
+        keyboardToolbar.onBack = { moveFocus(direction: .back) }
+        keyboardToolbar.onForward = { moveFocus(direction: .forward) }
+        keyboardToolbar.onDismiss = { focusedField = nil }
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             // Input Fields
@@ -177,55 +187,9 @@ struct FreeWaterDeficitCalculatorView: View {
                 }
             }
             .padding()
-            .background(
-                LinearGradient(
-                    colors: [Color.blue.opacity(0.05), Color.cyan.opacity(0.05)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.blue.opacity(0.2), lineWidth: 1)
-            )
-            .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    
-                    HStack(spacing: 16) {
-                        Button(action: { moveFocus(direction: .back) }) {
-                            Image(systemName: "chevron.up")
-                                .font(.system(size: 16, weight: .semibold))
-                        }
-                        .disabled(focusedField == .currentSodium)
-                        
-                        Divider()
-                            .frame(height: 20)
-                        
-                        Button(action: { moveFocus(direction: .forward) }) {
-                            Image(systemName: "chevron.down")
-                                .font(.system(size: 16, weight: .semibold))
-                        }
-                        .disabled(isLastField)
-                        
-                        Divider()
-                            .frame(height: 20)
-                        
-                        Button(action: {
-                            if isLastField {
-                                focusedField = nil
-                            } else {
-                                moveFocus(direction: .forward)
-                            }
-                        }) {
-                            Text(isLastField ? "Done" : "Next")
-                                .font(.system(size: 14, weight: .bold))
-                        }
-                    }
-                    .padding(.leading, 6)
-                }
-            }
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
+            .onChange(of: focusedField) { _, _ in updateToolbarState() }
+            .onDisappear { keyboardToolbar.isActive = false }
             
             // Results
             if let current = Double(currentSodium),
@@ -350,12 +314,7 @@ struct FreeWaterDeficitCalculatorView: View {
                     }
                     .padding()
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.orange.opacity(0.1))
-                    .cornerRadius(8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-                    )
+                    .background(.ultraThinMaterial, in: .rect(cornerRadius: 10))
                     
                     // Interpretation
                     VStack(alignment: .leading, spacing: 8) {
@@ -368,24 +327,11 @@ struct FreeWaterDeficitCalculatorView: View {
                             .foregroundColor(.primary)
                             .padding()
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(
-                                LinearGradient(
-                                    colors: [Color.indigo.opacity(0.15), Color.purple.opacity(0.1)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .cornerRadius(8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.indigo.opacity(0.3), lineWidth: 1)
-                            )
+                            .background(.ultraThinMaterial, in: .rect(cornerRadius: 10))
                     }
                 }
                 .padding()
-                .background(Color(uiColor: .secondarySystemGroupedBackground))
-                .cornerRadius(12)
-                .shadow(color: Color.primary.opacity(0.1), radius: 5, x: 0, y: 2)
+                .glassEffect(.regular, in: .rect(cornerRadius: 16))
                 .transition(.asymmetric(insertion: .opacity.combined(with: .scale(scale: 0.9)), removal: .opacity))
                 .animation(.spring(response: 0.5, dampingFraction: 0.7), value: freeWaterDeficit)
             }
@@ -395,8 +341,7 @@ struct FreeWaterDeficitCalculatorView: View {
                 Text("Formula")
                     .font(.headline)
                     .foregroundColor(.orange)
-                Text("Free Water Deficit = TBW × (Na_current - Na_desired) / Na_desired")
-                    .font(.system(.body, design: .monospaced))
+                formulaText("Free Water Deficit = TBW × (Na_current - Na_desired) / Na_desired")
                     .foregroundColor(.primary)
                 Text("TBW Calculation:")
                     .font(.system(.caption, design: .monospaced))
@@ -408,18 +353,7 @@ struct FreeWaterDeficitCalculatorView: View {
                     .foregroundColor(.primary)
             }
             .padding()
-            .background(
-                LinearGradient(
-                    colors: [Color.orange.opacity(0.08), Color.yellow.opacity(0.08)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-            )
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
             
             // Clinical Notes
             VStack(alignment: .leading, spacing: 8) {
@@ -445,18 +379,23 @@ struct FreeWaterDeficitCalculatorView: View {
                 }
             }
             .padding()
-            .background(
-                LinearGradient(
-                    colors: [Color.pink.opacity(0.08), Color.red.opacity(0.06)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.pink.opacity(0.3), lineWidth: 1)
-            )
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
+            
+            // Abbreviations
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Abbreviations")
+                    .font(.headline)
+                    .foregroundColor(.gray)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("TBW — Total Body Water")
+                    Text("D5W — Dextrose 5% in Water")
+                    Text("NS — Normal Saline")
+                }
+                .font(.caption)
+                .foregroundColor(.secondary)
+            }
+            .padding()
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
         }
     }
 }
@@ -466,4 +405,5 @@ struct FreeWaterDeficitCalculatorView: View {
         FreeWaterDeficitCalculatorView()
             .padding()
     }
+    .environmentObject(KeyboardToolbarState())
 }

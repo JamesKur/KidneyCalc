@@ -7,6 +7,7 @@ struct CKDEPICalculatorView: View {
     @State private var sex: Sex = .male
     @State private var useCystatinC: Bool = false
     @FocusState private var focusedField: Field?
+    @EnvironmentObject private var keyboardToolbar: KeyboardToolbarState
     
     enum Sex: String, CaseIterable {
         case male = "Male"
@@ -141,6 +142,15 @@ struct CKDEPICalculatorView: View {
         case forward, back
     }
     
+    private func updateToolbarState() {
+        keyboardToolbar.isActive = focusedField != nil
+        keyboardToolbar.isFirstField = focusedField == .creatinine
+        keyboardToolbar.isLastField = isLastField
+        keyboardToolbar.onBack = { moveFocus(direction: .back) }
+        keyboardToolbar.onForward = { moveFocus(direction: .forward) }
+        keyboardToolbar.onDismiss = { focusedField = nil }
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             // Input Fields
@@ -208,55 +218,10 @@ struct CKDEPICalculatorView: View {
                 }
             }
             .padding()
-            .background(
-                LinearGradient(
-                    colors: [Color.blue.opacity(0.05), Color.cyan.opacity(0.05)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.blue.opacity(0.2), lineWidth: 1)
-            )
-            .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    
-                    HStack(spacing: 16) {
-                        Button(action: { moveFocus(direction: .back) }) {
-                            Image(systemName: "chevron.up")
-                                .font(.system(size: 16, weight: .semibold))
-                        }
-                        .disabled(focusedField == .creatinine)
-                        
-                        Divider()
-                            .frame(height: 20)
-                        
-                        Button(action: { moveFocus(direction: .forward) }) {
-                            Image(systemName: "chevron.down")
-                                .font(.system(size: 16, weight: .semibold))
-                        }
-                        .disabled(isLastField)
-                        
-                        Divider()
-                            .frame(height: 20)
-                        
-                        Button(action: {
-                            if isLastField {
-                                focusedField = nil
-                            } else {
-                                moveFocus(direction: .forward)
-                            }
-                        }) {
-                            Text(isLastField ? "Done" : "Next")
-                                .font(.system(size: 14, weight: .bold))
-                        }
-                    }
-                    .padding(.leading, 6)
-                }
-            }
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
+            .onChange(of: focusedField) { _, _ in updateToolbarState() }
+            .onChange(of: useCystatinC) { _, _ in updateToolbarState() }
+            .onDisappear { keyboardToolbar.isActive = false }
             
             // Results
             if let gfr = eGFR {
@@ -327,9 +292,7 @@ struct CKDEPICalculatorView: View {
                     }
                 }
                 .padding()
-                .background(Color(uiColor: .secondarySystemGroupedBackground))
-                .cornerRadius(12)
-                .shadow(color: Color.primary.opacity(0.1), radius: 5, x: 0, y: 2)
+                .glassEffect(.regular, in: .rect(cornerRadius: 16))
                 .transition(.asymmetric(insertion: .opacity.combined(with: .scale(scale: 0.9)), removal: .opacity))
                 .animation(.spring(response: 0.5, dampingFraction: 0.7), value: eGFR)
             }
@@ -340,7 +303,7 @@ struct CKDEPICalculatorView: View {
                     .font(.headline)
                     .foregroundColor(.orange)
                 Text("Creatinine:")
-                    .font(.system(.caption, design: .monospaced))
+                    .font(.system(.callout, design: .monospaced))
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
                 Text("eGFR = 142 × (Scr/κ)^α × 0.9938^age [× 1.012 if female]")
@@ -355,7 +318,7 @@ struct CKDEPICalculatorView: View {
                     .padding(.bottom, 4)
                 
                 Text("Cystatin C:")
-                    .font(.system(.caption, design: .monospaced))
+                    .font(.system(.callout, design: .monospaced))
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
                 Text("eGFR = 133 × (Scys/0.8)^α × 0.996^age [× 0.932 if female]")
@@ -367,7 +330,7 @@ struct CKDEPICalculatorView: View {
                     .padding(.bottom, 4)
                 
                 Text("Combined (Scr + Scys):")
-                    .font(.system(.caption, design: .monospaced))
+                    .font(.system(.callout, design: .monospaced))
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
                 Text("eGFR = 135 × (Scr/κ)^α₁ × (Scys/0.8)^α₂ × 0.9961^age [× 0.963 if female]")
@@ -375,18 +338,7 @@ struct CKDEPICalculatorView: View {
                     .foregroundColor(.primary)
             }
             .padding()
-            .background(
-                LinearGradient(
-                    colors: [Color.orange.opacity(0.08), Color.yellow.opacity(0.08)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-            )
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
             
             // CKD Stages
             VStack(alignment: .leading, spacing: 8) {
@@ -395,38 +347,45 @@ struct CKDEPICalculatorView: View {
                     .foregroundColor(.pink)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Stage 1: ≥90 - Normal or high")
-                        .font(.system(.caption, design: .monospaced))
+                        .font(.system(.body, design: .default))
                         .foregroundColor(.primary)
                     Text("Stage 2: 60-89 - Mildly decreased")
-                        .font(.system(.caption, design: .monospaced))
+                        .font(.system(.body, design: .default))
                         .foregroundColor(.primary)
                     Text("Stage 3a: 45-59 - Mild to moderate")
-                        .font(.system(.caption, design: .monospaced))
+                        .font(.system(.body, design: .default))
                         .foregroundColor(.primary)
                     Text("Stage 3b: 30-44 - Moderate to severe")
-                        .font(.system(.caption, design: .monospaced))
+                        .font(.system(.body, design: .default))
                         .foregroundColor(.primary)
                     Text("Stage 4: 15-29 - Severely decreased")
-                        .font(.system(.caption, design: .monospaced))
+                        .font(.system(.body, design: .default))
                         .foregroundColor(.primary)
                     Text("Stage 5: <15 - Kidney failure")
-                        .font(.system(.caption, design: .monospaced))
+                        .font(.system(.body, design: .default))
                         .foregroundColor(.primary)
                 }
             }
             .padding()
-            .background(
-                LinearGradient(
-                    colors: [Color.pink.opacity(0.08), Color.red.opacity(0.06)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.pink.opacity(0.3), lineWidth: 1)
-            )
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
+            
+            // Abbreviations
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Abbreviations")
+                    .font(.headline)
+                    .foregroundColor(.gray)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("CKD-EPI — Chronic Kidney Disease Epidemiology Collaboration")
+                    Text("eGFR — Estimated Glomerular Filtration Rate")
+                    Text("Scr — Serum Creatinine")
+                    Text("Scys — Serum Cystatin C")
+                    Text("CKD — Chronic Kidney Disease")
+                }
+                .font(.caption)
+                .foregroundColor(.secondary)
+            }
+            .padding()
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
         }
     }
 }
@@ -436,4 +395,5 @@ struct CKDEPICalculatorView: View {
         CKDEPICalculatorView()
             .padding()
     }
+    .environmentObject(KeyboardToolbarState())
 }

@@ -6,6 +6,7 @@ struct BicarbonateDeficitCalculatorView: View {
     @State private var weight: String = ""
     @State private var distributionVolume: DistributionVolume = .standard
     @FocusState private var focusedField: Field?
+    @EnvironmentObject private var keyboardToolbar: KeyboardToolbarState
     
     enum DistributionVolume: String, CaseIterable {
         case standard = "0.5 × wt (Standard)"
@@ -111,6 +112,15 @@ struct BicarbonateDeficitCalculatorView: View {
         case forward, back
     }
     
+    private func updateToolbarState() {
+        keyboardToolbar.isActive = focusedField != nil
+        keyboardToolbar.isFirstField = focusedField == .currentBicarbonate
+        keyboardToolbar.isLastField = isLastField
+        keyboardToolbar.onBack = { moveFocus(direction: .back) }
+        keyboardToolbar.onForward = { moveFocus(direction: .forward) }
+        keyboardToolbar.onDismiss = { focusedField = nil }
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             // Input Fields
@@ -156,55 +166,9 @@ struct BicarbonateDeficitCalculatorView: View {
                 }
             }
             .padding()
-            .background(
-                LinearGradient(
-                    colors: [Color.red.opacity(0.05), Color.orange.opacity(0.05)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.red.opacity(0.2), lineWidth: 1)
-            )
-            .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    
-                    HStack(spacing: 16) {
-                        Button(action: { moveFocus(direction: .back) }) {
-                            Image(systemName: "chevron.up")
-                                .font(.system(size: 16, weight: .semibold))
-                        }
-                        .disabled(focusedField == .currentBicarbonate)
-                        
-                        Divider()
-                            .frame(height: 20)
-                        
-                        Button(action: { moveFocus(direction: .forward) }) {
-                            Image(systemName: "chevron.down")
-                                .font(.system(size: 16, weight: .semibold))
-                        }
-                        .disabled(isLastField)
-                        
-                        Divider()
-                            .frame(height: 20)
-                        
-                        Button(action: {
-                            if isLastField {
-                                focusedField = nil
-                            } else {
-                                moveFocus(direction: .forward)
-                            }
-                        }) {
-                            Text(isLastField ? "Done" : "Next")
-                                .font(.system(size: 14, weight: .bold))
-                        }
-                    }
-                    .padding(.leading, 6)
-                }
-            }
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
+            .onChange(of: focusedField) { _, _ in updateToolbarState() }
+            .onDisappear { keyboardToolbar.isActive = false }
             
             // Results
             if let current = Double(currentBicarbonate),
@@ -344,12 +308,7 @@ struct BicarbonateDeficitCalculatorView: View {
                     }
                     .padding()
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.blue.opacity(0.1))
-                    .cornerRadius(8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.blue.opacity(0.3), lineWidth: 1)
-                    )
+                    .background(.ultraThinMaterial, in: .rect(cornerRadius: 10))
                     
                     // Interpretation
                     VStack(alignment: .leading, spacing: 8) {
@@ -362,24 +321,11 @@ struct BicarbonateDeficitCalculatorView: View {
                             .foregroundColor(.primary)
                             .padding()
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(
-                                LinearGradient(
-                                    colors: [Color.indigo.opacity(0.15), Color.purple.opacity(0.1)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .cornerRadius(8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.indigo.opacity(0.3), lineWidth: 1)
-                            )
+                            .background(.ultraThinMaterial, in: .rect(cornerRadius: 10))
                     }
                 }
                 .padding()
-                .background(Color(uiColor: .secondarySystemGroupedBackground))
-                .cornerRadius(12)
-                .shadow(color: Color.primary.opacity(0.1), radius: 5, x: 0, y: 2)
+                .glassEffect(.regular, in: .rect(cornerRadius: 16))
                 .transition(.asymmetric(insertion: .opacity.combined(with: .scale(scale: 0.9)), removal: .opacity))
                 .animation(.spring(response: 0.5, dampingFraction: 0.7), value: bicarbonateDeficit)
             }
@@ -389,63 +335,27 @@ struct BicarbonateDeficitCalculatorView: View {
                 Text("Formula")
                     .font(.headline)
                     .foregroundColor(.orange)
-                Text("Bicarbonate Deficit (mEq) = (Desired HCO3 - Current HCO3) × 0.5")
+                formulaText("Bicarbonate Deficit (mEq) = (Desired HCO_3 - Current HCO_3) × 0.5")
                     .font(.system(.body, design: .monospaced))
                     .foregroundColor(.primary)
             }
             .padding()
-            .background(
-                LinearGradient(
-                    colors: [Color.orange.opacity(0.08), Color.yellow.opacity(0.08)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-            )
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
             
-            // Clinical Notes
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Clinical Notes")
+            // Abbreviations
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Abbreviations")
                     .font(.headline)
-                    .foregroundColor(.pink)
+                    .foregroundColor(.gray)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("• Typically replace 50% of calculated deficit initially")
-                        .font(.system(.caption, design: .monospaced))
-                        .foregroundColor(.primary)
-                    Text("• Reserved for severe acidosis (pH < 7.1 or HCO3 < 10)")
-                        .font(.system(.caption, design: .monospaced))
-                        .foregroundColor(.primary)
-                    Text("• Rapid correction may cause paradoxical CNS acidosis")
-                        .font(.system(.caption, design: .monospaced))
-                        .foregroundColor(.primary)
-                    Text("• Monitor for hypernatremia, volume overload")
-                        .font(.system(.caption, design: .monospaced))
-                        .foregroundColor(.primary)
-                    Text("• Check ABG 30-60 minutes after administration")
-                        .font(.system(.caption, design: .monospaced))
-                        .foregroundColor(.primary)
-                    Text("• Address underlying cause of acidosis")
-                        .font(.system(.caption, design: .monospaced))
-                        .foregroundColor(.primary)
+                    Text("IV — Intravenous")
+                    Text("mEq — Milliequivalents")
                 }
+                .font(.caption)
+                .foregroundColor(.secondary)
             }
             .padding()
-            .background(
-                LinearGradient(
-                    colors: [Color.pink.opacity(0.08), Color.red.opacity(0.06)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.pink.opacity(0.3), lineWidth: 1)
-            )
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
         }
     }
 }
@@ -455,4 +365,5 @@ struct BicarbonateDeficitCalculatorView: View {
         BicarbonateDeficitCalculatorView()
             .padding()
     }
+    .environmentObject(KeyboardToolbarState())
 }
