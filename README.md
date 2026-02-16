@@ -11,40 +11,18 @@ KidneyCalc is a SwiftUI iOS app that provides a curated set of nephrology calcul
 
 ## Included Calculators
 
-- CKD-EPI 2021 eGFR (race-free)
-- Glucose correction for sodium
-- Adrogue–Madias sodium prediction
-- Free water deficit
-- Corrected calcium
-- Anion gap and delta–delta ratio
-- Acid–base interpretation helpers
-- Bicarbonate deficit
-
-## Requirements
-
-- macOS with Xcode installed
-- iOS simulator or a connected iOS device
-
-## Build and Run
-
-1. Open KidneyCalc.xcodeproj in Xcode.
-2. Select a simulator or device.
-3. Run the app (Cmd+R).
-
-## Project Structure
-
-- KidneyCalc/
-  - KidneyCalcApp.swift — app entry point
-  - ContentView.swift — main list, categories, and navigation
-  - Models/ — data models (Formula)
-  - Views/ — calculator views and formula detail UI
-
-## Adding a New Formula
-
-1. Add a Formula to the placeholder list in ContentView.swift.
-2. If a custom calculator view is needed, create it under Views/.
-3. Wire the new view in FormulaDetailView.swift (see the name-based switch).
-4. Optionally include equation, variables, and reference text for display.
+- Acid-Base Interpretation
+- Adrogue-Madias Sodium Prediction
+- Anion Gap & Delta-Delta
+- Bicarbonate Deficit
+- CKD-EPI 2021
+- Corrected Calcium
+- Electrolyte-Free Water Clearance
+- Free Water Deficit
+- Glucose Correction for Sodium
+- Serum Osmolality & Osmolal Gap
+- Urine Anion Gap
+- Urine Osmolal Gap
 
 ## Medical Disclaimer
 
