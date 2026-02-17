@@ -210,7 +210,7 @@ struct UrineAnionGapCalculatorView: View {
                             .foregroundColor(.primary)
                             .padding()
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(.ultraThinMaterial, in: .rect(cornerRadius: 10))
+                            .glassEffect(.regular, in: .rect(cornerRadius: 10))
                     }
                 }
                 .padding()

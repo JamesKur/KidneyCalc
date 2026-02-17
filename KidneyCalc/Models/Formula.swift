@@ -1,7 +1,7 @@
 import Foundation
 
-struct Formula: Identifiable {
-    let id = UUID()
+struct Formula: Identifiable, Equatable {
+    var id: String { name }
     let name: String
     let category: String
     let description: String

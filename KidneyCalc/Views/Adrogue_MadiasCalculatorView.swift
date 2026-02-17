@@ -172,35 +172,17 @@ struct Adrogue_MadiasCalculatorView: View {
                                 Text(fluid.name)
                                     .font(.caption)
                                     .fontWeight(.semibold)
+                                    .foregroundColor(.green)
                                     .padding(.horizontal, 10)
                                     .padding(.vertical, 6)
-                                    .background(Color.green.opacity(0.2))
-                                    .foregroundColor(.green)
-                                    .cornerRadius(6)
                             }
+                            .buttonStyle(.plain)
+                            .glassEffect(.regular.interactive(), in: .capsule)
                         }
                     }
                     .padding(.horizontal, 8)
                     .padding(.vertical, 6)
                 }
-                .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color(.systemGray6).opacity(0.7))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
-                        )
-                        .shadow(color: Color.black.opacity(0.08), radius: 2, x: 0, y: 1)
-                )
-                .mask(
-                    HStack(spacing: 0) {
-                        LinearGradient(colors: [.clear, .black], startPoint: .leading, endPoint: .trailing)
-                            .frame(width: 8)
-                        Color.black
-                        LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing)
-                            .frame(width: 8)
-                    }
-                )
                 
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Weight")
@@ -367,7 +349,7 @@ struct Adrogue_MadiasCalculatorView: View {
                             .foregroundColor(.primary)
                             .padding()
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(.ultraThinMaterial, in: .rect(cornerRadius: 10))
+                            .glassEffect(.regular, in: .rect(cornerRadius: 10))
                     }
                 }
                 .padding()

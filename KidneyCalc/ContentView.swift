@@ -345,7 +345,7 @@ struct ContentView: View {
                                             .fill(getCategoryColor(category).opacity(selectedCategory == category ? 0.7 : 0))
                                     )
                                     .glassEffect(.regular, in: .capsule)
-                                    .scaleEffect(selectedCategory == category ? 1.05 : 1.0)
+                                    .scaleEffect(selectedCategory == category ? 1.0 : 1.0)
                                     .animation(.spring(response: 0.3, dampingFraction: 0.6), value: selectedCategory)
                                 }
                             }
@@ -353,8 +353,9 @@ struct ContentView: View {
                         }
                     }
                     
-                    // Favorites Quick-Access Section
+                    // Favorites Quick-Access Section (Liquid Glass Chips)
                     if shouldShowFavoritesQuickAccess {
+                        // transition added so the section slides in/out smoothly
                         VStack(spacing: 12) {
                             HStack {
                                 Image(systemName: "star.fill")
@@ -384,35 +385,24 @@ struct ContentView: View {
                             .padding(.horizontal)
                             
                             ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 12) {
+                                HStack(spacing: 10) {
                                     ForEach(favoriteFormulas) { formula in
                                         NavigationLink(destination: FormulaDetailView(formula: formula)) {
-                                            VStack(alignment: .leading, spacing: 6) {
-                                                HStack {
-                                                    RoundedRectangle(cornerRadius: 3)
-                                                        .fill(getCategoryColor(formula.category))
-                                                        .frame(width: 3, height: 16)
-                                                    Text(formula.name)
-                                                        .font(.caption)
-                                                        .fontWeight(.semibold)
-                                                        .foregroundColor(.primary)
-                                                        .lineLimit(1)
-                                                    Spacer()
-                                                }
-                                                Text(formula.category)
-                                                    .font(.caption2)
-                                                    .foregroundColor(getCategoryColor(formula.category))
-                                            }
-                                            .frame(width: 140)
-                                            .padding(10)
+                                            LiquidGlassFavoriteChip(
+                                                formula: formula,
+                                                categoryColor: getCategoryColor(formula.category),
+                                                action: { }
+                                            )
+                                            .allowsHitTesting(false) // NavigationLink handles the tap
                                         }
-                                        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
+                                        .buttonStyle(.plain)
                                     }
                                 }
                                 .padding(.horizontal)
+                                .animation(.spring(response: 0.5, dampingFraction: 0.75), value: favoriteFormulas.map(\.id))
                             }
                         }
-                        .transition(.opacity)
+                        .transition(.move(edge: .top).combined(with: .opacity))
                     }
                     
                     // Formula Cards with glass
@@ -468,9 +458,7 @@ struct ContentView: View {
                                         FavoriteCardButton(
                                             isFavorite: favorites.isFavorite(formula),
                                             action: {
-                                                withAnimation(.spring(response: 0.45, dampingFraction: 0.82)) {
-                                                    favorites.toggle(formula)
-                                                }
+                                                favorites.toggle(formula)
                                             }
                                         )
                                         
@@ -489,7 +477,7 @@ struct ContentView: View {
                     .padding(.horizontal)
                     .padding(.bottom, 20)
                 }
-                .animation(.spring(response: 0.5, dampingFraction: 0.75), value: favoriteFormulas.isEmpty)
+                .animation(.spring(response: 0.4, dampingFraction: 0.8), value: favorites.favoriteNames)
                 } // ScrollView
             }
             .navigationTitle("")

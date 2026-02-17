@@ -146,26 +146,42 @@ struct AnionGapCalculatorView: View {
                     .fontWeight(.semibold)
                     .foregroundColor(.gray)
                 
-                HStack(spacing: 16) {
-                    Button(action: { useDirectInput = false }) {
+                HStack(spacing: 12) {
+                    Button(action: {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                            useDirectInput = false
+                        }
+                    }) {
                         Text("From Electrolytes")
                             .frame(maxWidth: .infinity)
                             .padding(10)
-                            .background(useDirectInput ? Color.gray.opacity(0.1) : Color.blue.opacity(0.2))
-                            .foregroundColor(useDirectInput ? .gray : .blue)
-                            .cornerRadius(8)
+                            .foregroundColor(useDirectInput ? .secondary : .blue)
                             .fontWeight(.medium)
                     }
+                    .buttonStyle(.plain)
+                    .background(
+                        Capsule()
+                            .fill(useDirectInput ? Color.clear : Color.blue.opacity(0.2))
+                    )
+                    .glassEffect(.regular.interactive(), in: .capsule)
                     
-                    Button(action: { useDirectInput = true }) {
+                    Button(action: {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                            useDirectInput = true
+                        }
+                    }) {
                         Text("Direct AG Input")
                             .frame(maxWidth: .infinity)
                             .padding(10)
-                            .background(useDirectInput ? Color.blue.opacity(0.2) : Color.gray.opacity(0.1))
-                            .foregroundColor(useDirectInput ? .blue : .gray)
-                            .cornerRadius(8)
+                            .foregroundColor(useDirectInput ? .blue : .secondary)
                             .fontWeight(.medium)
                     }
+                    .buttonStyle(.plain)
+                    .background(
+                        Capsule()
+                            .fill(useDirectInput ? Color.blue.opacity(0.2) : Color.clear)
+                    )
+                    .glassEffect(.regular.interactive(), in: .capsule)
                 }
             }
             .padding()
@@ -377,7 +393,7 @@ struct AnionGapCalculatorView: View {
                                     .fontWeight(.medium)
                                     .padding()
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(.ultraThinMaterial, in: .rect(cornerRadius: 10))
+                                    .glassEffect(.regular, in: .rect(cornerRadius: 10))
                             }
                         }
                     }

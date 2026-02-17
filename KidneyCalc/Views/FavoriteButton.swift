@@ -72,51 +72,49 @@ private struct GlassyStar: View {
 // MARK: - Toolbar Favorite Button
 
 /// Animated liquid-glass star button for toggling favorites (toolbar size).
-/// Features a scale + ripple animation on tap for a satisfying feel.
+/// Uses iOS 26 `.glassEffect()` for a native liquid glass circle backdrop.
+/// Features a gentle glow and fade animation on tap.
 struct FavoriteButton: View {
     let isFavorite: Bool
     let action: () -> Void
     
-    @State private var pulseScale: CGFloat = 1.0
-    @State private var rippleOpacity: Double = 0.0
-    @State private var rippleScale: CGFloat = 0.5
+    @State private var glowOpacity: Double = 0.0
     
     var body: some View {
         Button(action: {
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) {
-                pulseScale = 1.3
+            withAnimation(.easeOut(duration: 0.6)) {
+                glowOpacity = 1.0
             }
-            withAnimation(.easeOut(duration: 0.4)) {
-                rippleOpacity = 0.6
-                rippleScale = 2.0
-            }
-            withAnimation(.easeOut(duration: 0.4).delay(0.15)) {
-                rippleOpacity = 0.0
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
-                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                    pulseScale = 1.0
-                    rippleScale = 0.5
-                }
+            withAnimation(.easeOut(duration: 0.6).delay(0.2)) {
+                glowOpacity = 0.0
             }
             action()
         }) {
             ZStack {
-                Circle()
-                    .stroke(
-                        isFavorite ? Color.yellow.opacity(rippleOpacity) : Color.orange.opacity(rippleOpacity),
-                        lineWidth: 2
-                    )
-                    .scaleEffect(rippleScale)
-                    .frame(width: 32, height: 32)
+                // Gentle glow
+                if glowOpacity > 0 {
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                gradient: Gradient(colors: [
+                                    Color.yellow.opacity(0.4 * glowOpacity),
+                                    Color.yellow.opacity(0.0)
+                                ]),
+                                center: .center,
+                                startRadius: 0,
+                                endRadius: 24
+                            )
+                        )
+                        .frame(width: 48, height: 48)
+                }
                 
                 GlassyStar(filled: isFavorite, size: 20)
-                    .scaleEffect(pulseScale)
             }
             .frame(width: 44, height: 44)
             .contentShape(Circle())
         }
         .buttonStyle(SmoothPressButtonStyle())
+        .glassEffect(.regular.interactive(), in: .circle)
         .accessibilityLabel(isFavorite ? "Remove from Favorites" : "Add to Favorites")
     }
 }
@@ -124,31 +122,85 @@ struct FavoriteButton: View {
 // MARK: - Card Favorite Button
 
 /// Compact glassy star button for use in formula cards.
+/// Uses iOS 26 `.glassEffect()` for a native liquid glass circle backdrop.
 struct FavoriteCardButton: View {
     let isFavorite: Bool
     let action: () -> Void
     
-    @State private var pulseScale: CGFloat = 1.0
-    @State private var isPressed: Bool = false
+    @State private var glowOpacity: Double = 0.0
     
     var body: some View {
         Button(action: {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                pulseScale = 1.3
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                withAnimation(.spring(response: 0.4, dampingFraction: 0.65)) {
-                    pulseScale = 1.0
-                }
-            }
             action()
+            withAnimation(.easeOut(duration: 0.5)) {
+                glowOpacity = 1.0
+            }
+            withAnimation(.easeOut(duration: 0.5).delay(0.15)) {
+                glowOpacity = 0.0
+            }
         }) {
-            GlassyStar(filled: isFavorite, size: 17)
-                .scaleEffect(pulseScale)
-                .frame(width: 36, height: 36)
-                .contentShape(Circle())
+            ZStack {
+                // Gentle glow
+                if glowOpacity > 0 {
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                gradient: Gradient(colors: [
+                                    Color.yellow.opacity(0.3 * glowOpacity),
+                                    Color.yellow.opacity(0.0)
+                                ]),
+                                center: .center,
+                                startRadius: 0,
+                                endRadius: 20
+                            )
+                        )
+                        .frame(width: 44, height: 44)
+                }
+                
+                GlassyStar(filled: isFavorite, size: 17)
+            }
+            .frame(width: 36, height: 36)
+            .contentShape(Circle())
         }
         .buttonStyle(SmoothPressButtonStyle())
+        .glassEffect(.regular.interactive(), in: .circle)
         .accessibilityLabel(isFavorite ? "Remove from Favorites" : "Add to Favorites")
+    }
+}
+
+// MARK: - Liquid Glass Favorite Chip
+
+/// A favorite item chip that appears in the quick-access bar with a liquid glass effect.
+/// Uses `.glassEffect()` for native iOS 26 liquid glass with smooth morphing transitions.
+struct LiquidGlassFavoriteChip: View {
+    let formula: Formula
+    let categoryColor: Color
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(categoryColor)
+                    .frame(width: 3, height: 16)
+                Text(formula.name)
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+        }
+        .buttonStyle(SmoothPressButtonStyle())
+        .glassEffect(.regular.interactive(), in: .capsule)
+        .transition(
+            .asymmetric(
+                insertion: .scale(scale: 0.4, anchor: .center)
+                    .combined(with: .opacity),
+                removal: .scale(scale: 0.4, anchor: .center)
+                    .combined(with: .opacity)
+            )
+        )
     }
 }

@@ -314,7 +314,7 @@ struct FreeWaterDeficitCalculatorView: View {
                     }
                     .padding()
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(.ultraThinMaterial, in: .rect(cornerRadius: 10))
+                    .glassEffect(.regular, in: .rect(cornerRadius: 10))
                     
                     // Interpretation
                     VStack(alignment: .leading, spacing: 8) {
@@ -327,7 +327,7 @@ struct FreeWaterDeficitCalculatorView: View {
                             .foregroundColor(.primary)
                             .padding()
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(.ultraThinMaterial, in: .rect(cornerRadius: 10))
+                            .glassEffect(.regular, in: .rect(cornerRadius: 10))
                     }
                 }
                 .padding()
