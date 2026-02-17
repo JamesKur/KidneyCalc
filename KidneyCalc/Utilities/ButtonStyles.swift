@@ -97,3 +97,9 @@ struct KeyboardNavigationToolbar: View {
         }
     }
 }
+// MARK: - Shared Navigation Direction
+
+/// Direction for keyboard focus navigation, used by all calculator views.
+enum NavigationDirection {
+    case forward, back
+}

@@ -43,32 +43,33 @@ struct FormulaDetailView: View {
                 
                 Divider()
 
-                // Special calculator for Anion Gap and CKD-EPI
-                if formula.name == "Anion Gap & Delta-Delta" {
+                // Calculator for each formula
+                switch formula.name {
+                case "Anion Gap & Delta-Delta":
                     AnionGapCalculatorView()
-                } else if formula.name == "CKD-EPI 2021" {
+                case "CKD-EPI 2021":
                     CKDEPICalculatorView()
-                } else if formula.name == "Glucose Correction for Sodium" {
+                case "Glucose Correction for Sodium":
                     GlucoseCorrectionCalculatorView()
-                } else if formula.name == "Corrected Calcium" {
+                case "Corrected Calcium":
                     CorrectedCalciumCalculatorView()
-                } else if formula.name == "Adrogue-Madias Sodium Prediction" {
+                case "Adrogue-Madias Sodium Prediction":
                     Adrogue_MadiasCalculatorView()
-                } else if formula.name == "Free Water Deficit" {
+                case "Free Water Deficit":
                     FreeWaterDeficitCalculatorView()
-                } else if formula.name == "Acid-Base Interpretation" {
+                case "Acid-Base Interpretation":
                     AcidBaseCalculatorView()
-                } else if formula.name == "Bicarbonate Deficit" {
+                case "Bicarbonate Deficit":
                     BicarbonateDeficitCalculatorView()
-                } else if formula.name == "Serum Osmolality & Osmolal Gap" {
+                case "Serum Osmolality & Osmolal Gap":
                     OsmolalityCalculatorView()
-                } else if formula.name == "Electrolyte-Free Water Clearance" {
+                case "Electrolyte-Free Water Clearance":
                     EFWCCalculatorView()
-                } else if formula.name == "Urine Osmolal Gap" {
+                case "Urine Osmolal Gap":
                     UrineOsmolalGapCalculatorView()
-                } else if formula.name == "Urine Anion Gap" {
+                case "Urine Anion Gap":
                     UrineAnionGapCalculatorView()
-                } else {
+                default:
                     // Equation (if available)
                     if let equation = formula.equation {
                         VStack(alignment: .leading, spacing: 8) {
@@ -127,7 +128,12 @@ struct FormulaDetailView: View {
             }
             .padding()
             .padding(.bottom, keyboardToolbar.isActive ? 50 : 0)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            }
         }
+        .scrollDismissesKeyboard(.interactively)
             } // ZStack with background
         
             if keyboardToolbar.isActive {

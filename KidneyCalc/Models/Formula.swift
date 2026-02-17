@@ -1,6 +1,6 @@
 import Foundation
 
-struct Formula: Identifiable, Equatable {
+struct Formula: Identifiable, Hashable, Equatable {
     var id: String { name }
     let name: String
     let category: String

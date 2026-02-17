@@ -35,7 +35,6 @@ struct AcidBaseCalculatorView: View {
         // Determine if acidemia or alkalemia
         let isAcidemia = ph < 7.35
         let isAlkalemia = ph > 7.45
-        _ = ph >= 7.35 && ph <= 7.45  // Normal pH range
         
         // Check if HCO3 and PCO2 are abnormal
         let hco3Low = hco3 < 24
@@ -196,10 +195,6 @@ struct AcidBaseCalculatorView: View {
         }
     }
     
-    enum NavigationDirection {
-        case forward, back
-    }
-    
     private func updateToolbarState() {
         keyboardToolbar.isActive = focusedField != nil
         keyboardToolbar.isFirstField = focusedField == .pH
@@ -313,6 +308,9 @@ struct AcidBaseCalculatorView: View {
                                 .foregroundColor(.secondary)
                         }
                     }
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .glassEffect(.regular, in: .rect(cornerRadius: 10))
                 }
                 .padding()
                 .glassEffect(.regular, in: .rect(cornerRadius: 16))

@@ -25,7 +25,7 @@ struct ContentView: View {
         }
     }
     
-    let placeholderFormulas = [
+    static let placeholderFormulas = [
         Formula(
             name: "Acid-Base Interpretation",
             category: "Acid-Base",
@@ -210,16 +210,16 @@ struct ContentView: View {
     
     var filteredFormulas: [Formula] {
         if selectedCategory == "All Formulas" {
-            return placeholderFormulas
+            return Self.placeholderFormulas
         }
         if selectedCategory == "Favorites" {
-            return placeholderFormulas.filter { favorites.isFavorite($0) }
+            return Self.placeholderFormulas.filter { favorites.isFavorite($0) }
         }
-        return placeholderFormulas.filter { $0.category == selectedCategory }
+        return Self.placeholderFormulas.filter { $0.category == selectedCategory }
     }
     
     var favoriteFormulas: [Formula] {
-        placeholderFormulas.filter { favorites.isFavorite($0) }
+        Self.placeholderFormulas.filter { favorites.isFavorite($0) }
     }
 
     var shouldShowFavoritesQuickAccess: Bool {
@@ -345,7 +345,6 @@ struct ContentView: View {
                                             .fill(getCategoryColor(category).opacity(selectedCategory == category ? 0.7 : 0))
                                     )
                                     .glassEffect(.regular, in: .capsule)
-                                    .scaleEffect(selectedCategory == category ? 1.0 : 1.0)
                                     .animation(.spring(response: 0.3, dampingFraction: 0.6), value: selectedCategory)
                                 }
                             }

@@ -108,10 +108,6 @@ struct BicarbonateDeficitCalculatorView: View {
         }
     }
     
-    enum NavigationDirection {
-        case forward, back
-    }
-    
     private func updateToolbarState() {
         keyboardToolbar.isActive = focusedField != nil
         keyboardToolbar.isFirstField = focusedField == .currentBicarbonate

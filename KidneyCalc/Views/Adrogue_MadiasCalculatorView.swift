@@ -82,16 +82,14 @@ struct Adrogue_MadiasCalculatorView: View {
         }
     }
     
-    private func getCommonFluids() -> [(name: String, sodium: Double)] {
-        return [
-            ("0.9% NS", 154),
-            ("0.45% NS", 77),
-            ("Lactated Ringer's", 130),
-            ("D5W", 0),
-            ("2% Saline", 342),
-            ("3% Hypertonic Saline", 513)
-        ]
-    }
+    private static let commonFluids: [(name: String, sodium: Double)] = [
+        ("0.9% NS", 154),
+        ("0.45% NS", 77),
+        ("Lactated Ringer's", 130),
+        ("D5W", 0),
+        ("2% Saline", 342),
+        ("3% Hypertonic Saline", 513)
+    ]
     
     private var isLastField: Bool {
         return focusedField == .volume
@@ -116,10 +114,6 @@ struct Adrogue_MadiasCalculatorView: View {
                 }
             }
         }
-    }
-    
-    enum NavigationDirection {
-        case forward, back
     }
     
     private func updateToolbarState() {
@@ -165,7 +159,7 @@ struct Adrogue_MadiasCalculatorView: View {
                 // Common fluids quick reference
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        ForEach(getCommonFluids(), id: \.name) { fluid in
+                        ForEach(Self.commonFluids, id: \.name) { fluid in
                             Button(action: {
                                 infusolateSodium = String(format: "%.0f", fluid.sodium)
                             }) {

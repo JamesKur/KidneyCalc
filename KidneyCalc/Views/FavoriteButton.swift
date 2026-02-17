@@ -8,7 +8,7 @@ private struct SmoothPressButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(configuration.isPressed ? 0.85 : 1.0)
-            .opacity(configuration.isPressed ? 0.8 : 1.0)
+            .opacity(configuration.isPressed ? 0.95 : 1.0)
             .animation(.spring(response: 0.3, dampingFraction: 0.7), value: configuration.isPressed)
     }
 }
@@ -32,6 +32,7 @@ private struct GlassyStar: View {
                     .font(.system(size: size + 4, weight: .medium))
                     .foregroundStyle(.yellow.opacity(0.35))
                     .blur(radius: 6)
+                    .transition(.opacity) // Fades in smoothly
             }
             
             // Base icon
@@ -49,6 +50,8 @@ private struct GlassyStar: View {
                           ))
                         : AnyShapeStyle(.secondary)
                 )
+                // THE FIX: Symbol effect is applied directly to the changing image
+                .contentTransition(.symbolEffect(.replace))
             
             // Specular highlight (glass refraction look)
             if filled {
@@ -63,9 +66,10 @@ private struct GlassyStar: View {
                     )
                     .offset(x: -size * 0.08, y: -size * 0.1)
                     .blur(radius: 0.5)
+                    .transition(.opacity) // Fades in smoothly
             }
         }
-        .contentTransition(.symbolEffect(.replace))
+        // Removed the .contentTransition from the ZStack here!
     }
 }
 
@@ -114,7 +118,7 @@ struct FavoriteButton: View {
             .contentShape(Circle())
         }
         .buttonStyle(SmoothPressButtonStyle())
-        .glassEffect(.regular.interactive(), in: .circle)
+        .glassEffect(.regular, in: .circle)
         .accessibilityLabel(isFavorite ? "Remove from Favorites" : "Add to Favorites")
     }
 }
@@ -163,7 +167,7 @@ struct FavoriteCardButton: View {
             .contentShape(Circle())
         }
         .buttonStyle(SmoothPressButtonStyle())
-        .glassEffect(.regular.interactive(), in: .circle)
+        .glassEffect(.regular, in: .circle)
         .accessibilityLabel(isFavorite ? "Remove from Favorites" : "Add to Favorites")
     }
 }
