@@ -198,13 +198,5 @@ struct LiquidGlassFavoriteChip: View {
         }
         .buttonStyle(SmoothPressButtonStyle())
         .glassEffect(.regular.interactive(), in: .capsule)
-        .transition(
-            .asymmetric(
-                insertion: .scale(scale: 0.4, anchor: .center)
-                    .combined(with: .opacity),
-                removal: .scale(scale: 0.4, anchor: .center)
-                    .combined(with: .opacity)
-            )
-        )
     }
 }

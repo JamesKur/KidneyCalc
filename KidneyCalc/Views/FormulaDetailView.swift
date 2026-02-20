@@ -10,9 +10,8 @@ struct FormulaDetailView: View {
         ZStack(alignment: .bottom) {
             ZStack {
                 AnimatedMeshBackground()
-                
                 ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 16) {
                 // Title
                 Text(formula.name)
                     .font(.title2)
@@ -132,11 +131,13 @@ struct FormulaDetailView: View {
             .onTapGesture {
                 UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
             }
+            .scrollContentBackground(.hidden)
+            .background(Color.clear)
         }
         .scrollDismissesKeyboard(.interactively)
             } // ZStack with background
         
-            if keyboardToolbar.isActive {
+        if keyboardToolbar.isActive {
                 KeyboardNavigationToolbar(
                     isFirstField: keyboardToolbar.isFirstField,
                     isLastField: keyboardToolbar.isLastField,
@@ -151,6 +152,7 @@ struct FormulaDetailView: View {
         .animation(.easeInOut(duration: 0.2), value: keyboardToolbar.isActive)
         .environmentObject(keyboardToolbar)
         .navigationTitle(formula.name)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 FavoriteButton(

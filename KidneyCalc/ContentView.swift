@@ -3,8 +3,12 @@ import SwiftUI
 struct ContentView: View {
     @State private var selectedCategory: String = "All Formulas"
     @State private var isAnimating = false
+    @State private var dropAnimationStopped = false
     @EnvironmentObject var favorites: FavoritesManager
     @Environment(\.colorScheme) var colorScheme
+    @Namespace private var favoritesNamespace
+    @Namespace private var categoriesNamespace
+    @Namespace private var formulasNamespace
     
     let categories = ["All Formulas", "Favorites", "Acid-Base", "Bone & Mineral", "Electrolytes", "GFR"]
     
@@ -232,9 +236,8 @@ struct ContentView: View {
                 // Animated mesh gradient background
                 AnimatedMeshBackground()
                 
-                ScrollView {
                 VStack(spacing: 16) {
-                    // Header
+                    // Header with animated water drop
                     VStack(alignment: .leading, spacing: 12) {
                         HStack(spacing: 12) {
                             ZStack {
@@ -244,25 +247,23 @@ struct ContentView: View {
                                     .foregroundStyle(
                                         LinearGradient(
                                             colors: [
-                                                .cyan.opacity(0.3), // Top is lighter/clearer
-                                                .blue.opacity(0.6)  // Bottom collects the color/shadow
+                                                .cyan.opacity(0.3),
+                                                .blue.opacity(0.6)
                                             ],
                                             startPoint: .topLeading,
                                             endPoint: .bottomTrailing
                                         )
                                     )
-                                    // Add a subtle border to define the edge of the water
                                     .overlay(
                                         Image(systemName: "drop")
                                             .font(.system(size: 32))
                                             .foregroundStyle(.blue.opacity(0.3))
                                     )
                                 
-                                // LAYER 2: The "Wet" Shine (Specular Highlight)
-                                // This creates the glossy 3D curve look
+                                // LAYER 2: Specular Shine
                                 Image(systemName: "drop.fill")
-                                    .font(.system(size: 14)) // Smaller drop inside
-                                    .scaleEffect(x: 0.7, y: 1.8) // Squeeze to look like a reflection
+                                    .font(.system(size: 14))
+                                    .scaleEffect(x: 0.7, y: 1.8)
                                     .foregroundStyle(
                                         LinearGradient(
                                             colors: [.white.opacity(0.9), .white.opacity(0.0)],
@@ -270,14 +271,12 @@ struct ContentView: View {
                                             endPoint: .bottom
                                         )
                                     )
-                                    .rotationEffect(.degrees(15)) // Tilt the reflection slightly
-                                    .offset(x: -3, y: -3) // Move it to the "light source" (top left)
-                                    .blur(radius: 1) // Soften the shine
+                                    .rotationEffect(.degrees(15))
+                                    .offset(x: -3, y: -3)
+                                    .blur(radius: 1)
                             }
-                            // 3. THE ANIMATION: Gentle Bobbing & Breathing
-                            // Real water doesn't spin; it floats and pulses.
-                            .scaleEffect(isAnimating ? 1.05 : 1.0) // Subtle pulse
-                            .offset(y: isAnimating ? -2 : 2)       // Gentle float up and down
+                            .scaleEffect(isAnimating ? 1.05 : 1.0)
+                            .offset(y: isAnimating ? -2 : 2)
                             .shadow(
                                 color: .blue.opacity(isAnimating ? 0.3 : 0.1),
                                 radius: isAnimating ? 6 : 2,
@@ -291,10 +290,16 @@ struct ContentView: View {
                                 ) {
                                     isAnimating = true
                                 }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                                    withAnimation(.easeOut(duration: 0.5)) {
+                                        isAnimating = false
+                                        dropAnimationStopped = true
+                                    }
+                                }
                             }
                             
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("KidneyCalc")
+                                Text("NephroCalc")
                                     .font(.system(size: 28, weight: .bold))
                                     .foregroundColor(.primary)
                                 Text("Nephrology Calculator")
@@ -306,7 +311,7 @@ struct ContentView: View {
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.vertical, 20)
+                    .padding(.vertical, -4)
                     .padding(.horizontal)
                     
                     // Category Picker with glass pills
@@ -319,6 +324,7 @@ struct ContentView: View {
                             .padding(.horizontal)
                         
                         ScrollView(.horizontal, showsIndicators: false) {
+                            GlassEffectContainer(spacing: 10) {
                             HStack(spacing: 10) {
                                 ForEach(categories, id: \.self) { category in
                                     Button(action: {
@@ -345,17 +351,19 @@ struct ContentView: View {
                                             .fill(getCategoryColor(category).opacity(selectedCategory == category ? 0.7 : 0))
                                     )
                                     .glassEffect(.regular, in: .capsule)
+                                    .glassEffectID(category, in: categoriesNamespace)
                                     .animation(.spring(response: 0.3, dampingFraction: 0.6), value: selectedCategory)
                                 }
                             }
                             .padding(.horizontal)
+                            } // GlassEffectContainer
                         }
                     }
                     
                     // Favorites Quick-Access Section (Liquid Glass Chips)
                     if shouldShowFavoritesQuickAccess {
                         // transition added so the section slides in/out smoothly
-                        VStack(spacing: 12) {
+                        VStack(spacing: 6) { // Reduced spacing to bring the ScrollView closer
                             HStack {
                                 Image(systemName: "star.fill")
                                     .foregroundStyle(
@@ -382,32 +390,44 @@ struct ContentView: View {
                                 }
                             }
                             .padding(.horizontal)
+                            .padding(.top, -10) // Pull the HStack closer to the section above
                             
                             ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 10) {
-                                    ForEach(favoriteFormulas) { formula in
-                                        NavigationLink(destination: FormulaDetailView(formula: formula)) {
-                                            LiquidGlassFavoriteChip(
-                                                formula: formula,
-                                                categoryColor: getCategoryColor(formula.category),
-                                                action: { }
-                                            )
-                                            .allowsHitTesting(false) // NavigationLink handles the tap
+                                GlassEffectContainer(spacing: 10) {
+                                    HStack(spacing: 10) {
+                                        ForEach(favoriteFormulas) { formula in
+                                            NavigationLink(destination: FormulaDetailView(formula: formula)) {
+                                                HStack(spacing: 6) {
+                                                    RoundedRectangle(cornerRadius: 3)
+                                                        .fill(getCategoryColor(formula.category))
+                                                        .frame(width: 3, height: 16)
+                                                    Text(formula.name)
+                                                        .font(.caption)
+                                                        .fontWeight(.semibold)
+                                                        .foregroundColor(.primary)
+                                                        .lineLimit(1)
+                                                }
+                                                .padding(.horizontal, 12)
+                                                .padding(.vertical, 8)
+                                            }
+                                            .buttonStyle(.plain)
+                                            .glassEffect(.regular.interactive(), in: .capsule)
+                                            .glassEffectID(formula.id, in: favoritesNamespace)
                                         }
-                                        .buttonStyle(.plain)
                                     }
+                                    .padding(.horizontal)
+                                    .padding(.vertical, 2)
                                 }
-                                .padding(.horizontal)
-                                .animation(.spring(response: 0.5, dampingFraction: 0.75), value: favoriteFormulas.map(\.id))
                             }
+                            .padding(.bottom,-7)
                         }
-                        .transition(.move(edge: .top).combined(with: .opacity))
                     }
                     
                     // Formula Cards with glass
-                    VStack(spacing: 12) {
-                        if filteredFormulas.isEmpty {
-                            VStack(spacing: 12) {
+                    ScrollView(showsIndicators: false) {
+                        VStack(spacing: 12) {
+                            if filteredFormulas.isEmpty {
+                                VStack(spacing: 12) {
                                 if selectedCategory == "Favorites" {
                                     Image(systemName: "star.slash")
                                         .font(.system(size: 36))
@@ -466,20 +486,38 @@ struct ContentView: View {
                                             .foregroundColor(.secondary)
                                     }
                                     .padding(.vertical, 8)
+                                    .padding(.vertical, 4)
+                                    .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 16))
+                                    .glassEffectID(formula.id, in: formulasNamespace)
+                                    .scrollTransition(.animated.threshold(.visible(0.3))) { content, phase in
+                                        content
+                                            .opacity(phase.isIdentity ? 1.0 : 0.0)
+                                            .scaleEffect(phase.isIdentity ? 1.0 : 0.95)
+                                    }
                                 }
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 4)
-                                .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 16))
                             }
                         }
                     }
                     .padding(.horizontal)
-                    .padding(.bottom, 20)
+                    .padding(.top, 10)
+                }
+                .mask(LinearGradient(
+                        stops: [
+                            .init(color: .clear, location: 0),
+                            .init(color: .primary, location: 0.03)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    )
                 }
                 .animation(.spring(response: 0.4, dampingFraction: 0.8), value: favorites.favoriteNames)
-                } // ScrollView
+                .ignoresSafeArea(edges: .bottom)
+                }
+                
             }
             .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
     
@@ -499,7 +537,7 @@ struct ContentView: View {
             return "star.fill"
         }
     }
-}
+
 
 #Preview {
     ContentView()
